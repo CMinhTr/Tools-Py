@@ -44,8 +44,6 @@ try:
     questionNineSelect = driver.find_element(By.XPATH,'(//div[@class="AB7Lab Id5V1"])[27]')
     questionNineSelect.click()
 
-    questionTenSelect = driver.find_element(By.XPATH,'(//div[@class="AB7Lab Id5V1"])[4]')
-    questionTenSelect.click()
 
     Submit = driver.find_element(By.XPATH,'//*[@id="mG61Hd"]/div[2]/div/div[3]/div[1]/div[1]/div')
     Submit.click()
