@@ -1,70 +1,262 @@
-import email.utils
 import imaplib
 import email
+from email.utils import parsedate_to_datetime
 from email.header import decode_header
 from bs4 import BeautifulSoup
 
-# Thông tin đăng nhập email
-username = "canlong878@gmail.com"
-password = "apsajwmcxaymesvq"
+import re
 
-def receive_email():
-    result = ""
+username = "NogglerZebley992@gmail.com"
+password = "wxluiehdpdfqvaih"
 
-    # Kết nối đến máy chủ IMAP
-    mail = imaplib.IMAP4_SSL("imap.gmail.com")
-    mail.login(username, password)
-    mail.select("inbox")
+def binance_code(username, password):
+    result = ''  
+    mail = imaplib.IMAP4_SSL('imap.gmail.com')
+    
+    try:
+        mail.login(username, password)
+    except imaplib.IMAP4.error:
+        print('Email Login Failed')
+        return result
 
-    from_email = 'do-not-reply@ses.binance.com'
-    status, messages = mail.search(None, f'(FROM "{from_email}")')
+    mail.select('INBOX')
 
-    email_ids = messages[0].split()
+    from_emails = [
+        'do-not-reply@binance.com',
+        'donotreply@directmail.binance.com',
+        'do-not-reply@post.binance.com',
+        'do-not-reply@ses.binance.com',
+        'do_not_reply@mailer.binance.com',
+        'do_not_reply@mailer1.binance.com',
+        'do_not_reply@mailer2.binance.com',
+        'do_not_reply@mailer3.binance.com',
+        'do_not_reply@mailer4.binance.com',
+        'do_not_reply@mailer5.binance.com',
+        'do_not_reply@mailer6.binance.com',
+        'notifications@post.binance.com',
+        'do-not-reply@notice.binance.com',
+        'do_not_reply@mgmailer.binance.com',
+        'do-not-reply@directmail2.binance.com',
+        'do_not_reply@mgmailer2.binance.com',
+        'do_not_reply@mgdirectmail.binance.com'
+    ]
+
     email_data = []
-    for email_id in email_ids:
-        status, msg_data = mail.fetch(email_id, "(RFC822)")
-        for response_part in msg_data:
-            if isinstance(response_part, tuple):
-                msg = email.message_from_bytes(response_part[1])
-                email_date = email.utils.parsedate_to_datetime(msg['Date'])
-                email_data.append((email_data,msg))
+
+    for from_email in from_emails:
+        status, messages = mail.search(None, f'(FROM "{from_email}")')
+        if status != "OK":
+            result += f'Không thể tìm thấy email từ địa chỉ: {from_email}\n'
+            continue
+
+        email_ids = messages[0].split()
+        print(f"Found {len(email_ids)} emails from {from_email}")
+        for email_id in email_ids:
+            status, msg_data = mail.fetch(email_id, '(RFC822)')
+
+            for response_data in msg_data:
+                if isinstance(response_data, tuple):
+                    msg = email.message_from_bytes(response_data[1])
+                    email_date = parsedate_to_datetime(msg['Date'])
+                    email_data.append((email_date, msg))
     email_data.sort(key=lambda x: x[0], reverse=True)
+
     if email_data:
         last_email = email_data[0][1]
+        subject = last_email['Subject']
+        decoded_subject = decode_header(subject)
+        subject_title = ''
 
-        encode_subtitle = last_email['Subject']
-        decode_subtitle_part = decode_header(encode_subtitle)
-        decode_subtitle = ''
-        for part, encoding in decode_subtitle_part:
+        for part, encoding in decoded_subject:
             if isinstance(part, bytes):
-                decode_subtitle += part.decode(encoding or 'utf-8')
+                subject_title += part.decode(encoding if encoding else 'utf-8')
             else:
-                decode_subtitle += part
+                subject_title += part
 
-        if last_email.is_multipart():
-            for part in last_email.walk():
-                content_type = part.get_content_type()
-                content_disposition = str(part.get("Content-Disposition"))
-                if "attachment" not in content_disposition:
-                    payload = part.get_payload(decode=True)
-                    body = payload.decode() if isinstance(payload, bytes) else payload
-                    result += decode_subtitle + extract_binance_code(body)
+        payload = last_email.get_payload(decode=True)
+        body = payload.decode('utf-8', errors='ignore')
+        soup = BeautifulSoup(body, 'html.parser')
+        get_binance_code = soup.find('div', style="font-family: BinancePlex,Arial,PingFangSC-Regular,'Microsoft YaHei',sans-serif; font-size: 18px; line-height: 30px; text-align: left; color: #f0b90b;")
+        
+        if get_binance_code:
+            binance_code = get_binance_code.get_text()
+            result = subject_title + ' - Code: ' + binance_code
         else:
-            payload = last_email.get_payload(decode=True)
-            body = payload.decode() if isinstance(payload, bytes) else payload
-            result += decode_subtitle + '- Mã Binance: ' + extract_binance_code(body)
+            result = subject_title + ' - Không tìm thấy mã Binance'
+    else:
+        result = 'Không tìm thấy email nào từ các địa chỉ Binance'
 
-    mail.close()
-    mail.logout()
     return result
 
-def extract_binance_code(html_body):
-    soup = BeautifulSoup(html_body, "html.parser")
-    binance_code_div = soup.find("div", style="font-family:BinancePlex,Arial,PingFangSC-Regular,'Microsoft YaHei',sans-serif;font-size:20px;font-weight:900;line-height:30px;text-align:left;color:#f0b90b;")
-    if binance_code_div:
-        return binance_code_div.get_text().strip()
-    return ""
 
-# Gọi hàm receive_email để nhận và xử lý email
-email_content = receive_email()
-print("Email Content: ", email_content)
+def bybit_code(username, password):
+    result = ''  
+    mail = imaplib.IMAP4_SSL('imap.gmail.com')
+    
+    try:
+        mail.login(username, password)
+    except imaplib.IMAP4.error:
+        print('Email Login Failed')
+        return result
+
+    mail.select('INBOX')
+
+    from_emails = [
+        'notification@bybit.com',
+        'notification@noreply.bybit.com',
+        'notification@notification-2.bybit.com'
+
+    ]
+
+    email_data = []
+
+    for from_email in from_emails:
+        status, messages = mail.search(None, f'(FROM "{from_email}")')
+        if status != "OK":
+            result += f'Không thể tìm thấy email từ địa chỉ: {from_email}\n'
+            continue
+
+        email_ids = messages[0].split()
+
+        print(f"Found {len(email_ids)} emails from {from_email}")
+        for email_id in email_ids:
+            status, msg_data = mail.fetch(email_id, '(RFC822)')
+
+            for response_data in msg_data:
+                if isinstance(response_data, tuple):
+                    msg = email.message_from_bytes(response_data[1])
+                    email_date = parsedate_to_datetime(msg['Date'])
+                    print(email_date)
+                    email_data.append((email_date, msg))
+
+    email_data.sort(key=lambda x: x[0], reverse=True)
+
+    if email_data:
+        last_email = email_data[0][1]
+        subject = last_email['Subject']
+        decoded_subject = decode_header(subject)
+        subject_title = ''
+
+        for part, encoding in decoded_subject:
+            if isinstance(part, bytes):
+                subject_title += part.decode(encoding if encoding else 'utf-8')
+            else:
+                subject_title += part
+        
+        payload = last_email.get_payload(decode=True)
+        body = payload.decode('utf-8', errors='ignore')
+        soup = BeautifulSoup(body, 'html.parser')
+        get_bybit_code = soup.get_text()
+        match = re.search(r'(\d{6})', get_bybit_code)
+        if match:
+            bybit_code = match.group(1)
+            result += subject_title + ' - Code: ' + bybit_code
+        else:
+            result += subject_title + ' - Không tìm thấy mã Bybit'
+    else:
+        result = 'Không tìm thấy email nào từ các địa chỉ Bybit'
+
+    return result
+
+def mexc_code(username, password):
+    result = ''  
+    mail = imaplib.IMAP4_SSL('imap.gmail.com')
+    
+    try:
+        mail.login(username, password)
+    except imaplib.IMAP4.error:
+        print('Email Login Failed')
+        return result
+
+    mail.select('INBOX')
+
+    from_emails = [
+        'mexc@email.mexc.link',
+        'mexc@email.mexc.ci',
+        'mexc@email.mexc.cg',
+        'mexc_official@email.mexc.link',
+        'do_not_reply@mailer.mexc.sg',
+        'mexc@notice.mexc.link',
+        'mexc@notice.mexc.cg',
+        'mexc@notice.mexc.ci',
+        'mexc@info.mexc.link',
+        'mexc@info.mexc.cg',
+        'mexc@info.mexc.ci',
+        'dontreply@notification.mexc.link',
+        'dontreply@notification.mexc.cg',
+        'dontreply@notification.mexc.ci'
+
+    ]
+
+    email_data = []
+
+    for from_email in from_emails:
+        status, messages = mail.search(None, f'(FROM "{from_email}")')
+        if status != "OK":
+            result += f'Không thể tìm thấy email từ địa chỉ: {from_email}\n'
+            continue
+
+        email_ids = messages[0].split()
+
+        print(f"Found {len(email_ids)} emails from {from_email}")
+        for email_id in email_ids:
+            print('Email ID', email_id)
+            status, msg_data = mail.fetch(email_id, '(RFC822)')
+            print('Msg: ', msg_data)
+            for response_data in msg_data:
+                if isinstance(response_data, tuple):
+                    msg = email.message_from_bytes(response_data[1])
+                    email_date = parsedate_to_datetime(msg['Date'])
+                    print(email_date)
+                    email_data.append((email_date, msg))
+
+    email_data.sort(key=lambda x: x[0], reverse=True)
+
+    if email_data:
+        last_email = email_data[0][1]
+        print('Last Email: ', last_email)
+        subject = last_email['Subject']
+        decoded_subject = decode_header(subject)
+        subject_title = ''
+        for part, encoding in decoded_subject:
+            if isinstance(part, bytes):
+                subject_title += part.decode(encoding if encoding else 'utf-8')
+            else:
+                subject_title += part
+
+        #payload = last_email.get_payload(decode=True)
+        for part in last_email.walk():
+            if part.get_content_type() == 'text/plain':
+                payload = part.get_payload(decode=True)
+                print('Payload: ', payload)
+                break  # Stop after finding the plain text part
+
+        
+        if not payload:
+            result = 'Không có nội dung email để xử lý'
+            return result
+
+        try:
+            body = payload.decode('utf-8', errors='ignore')
+        except AttributeError:
+            result = 'Không thể giải mã nội dung email'
+            return result
+
+        print('Body: ', body)
+
+        soup = BeautifulSoup(body, 'html.parser')
+        get_bybit_code = soup.get_text()
+        match = re.search(r'(\d{6})', get_bybit_code)
+        if match:
+            bybit_code = match.group(1)
+            result += subject_title + ' - Code: ' + bybit_code
+        else:
+            result += subject_title + ' - Không tìm thấy mã MEXC'
+    else:
+        result = 'Không tìm thấy email nào từ các địa chỉ MEXC'
+
+    return result
+
+
+bnb_code = mexc_code(username, password)
+print(bnb_code)
