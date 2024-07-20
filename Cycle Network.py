@@ -22,6 +22,7 @@ def loginWallet():
                 driver.close()
 
         driver.get('chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/home.html#unlock')
+        time.sleep(3)
         try:
             print('Nhập mật khẩu')
             element = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[2]/div/div/form/div/div/input")))
@@ -45,12 +46,25 @@ def click_button_with_text(driver, text):
         button.click()
     except Exception as e:
         print(f"Không tìm thấy phần tử <button> với text '{text}': {e}")
-
+verify = '''
+var divs = document.querySelectorAll('div.css-1ykwh6m');
+var found = false;
+divs.forEach(function(div) {
+    if (div.textContent.trim() === "verify") {
+        div.click();
+        found = true;
+        console.log("Đã click vào phần tử với text 'verify'.");
+    }
+});
+if (!found) {
+    console.log("Không tìm thấy phần tử <div> với text 'verify'.");
+}
+'''
 if __name__=="__main__":
     for For1 in range(1,999):
 
         if oExcel._ExcelReadCell(f'{CotKetQua}{For1}')!=None:continue
-        Reset_Modem()
+        #Reset_Modem()
         oExcel._ExcelBookSave()
         
         DD_ProfileChrome = oExcel._ExcelReadCell(f"A{For1}")
@@ -85,46 +99,271 @@ if __name__=="__main__":
             if driver.title != '':
                 extension_link[f'{driver.title}'] = driver.current_url
         loginWallet()
+        TimeInt = time.time(); TimeOut = 60
+        while time.time() < TimeInt+TimeOut:
+            try:
+                driver.get('https://x.com/intent/follow?screen_name=iotex_io')
+                element = WebDriverWait(driver,5).until(EC.visibility_of_element_located((By.XPATH,'//*[@aria-label="Following @iotex_io"]')))
+                print('Fowllow iotex_io OK')
+                break
+            except: 
+                try:
+                    element = WebDriverWait(driver,5).until(EC.visibility_of_element_located((By.XPATH,'//*[@aria-label="Follow @iotex_io"]')))
+                    element.click()
+                    print('Fowllow iotex_io OK')
+                except: 
+                    driver.find_element(By.XPATH,'//button[@data-testid="confirmationSheetConfirm"]').click()
+                    
+        TimeInt = time.time(); TimeOut = 60
+        while time.time() < TimeInt+TimeOut:
+            try:
+                driver.get('https://x.com/tapup_tg')
+                element = WebDriverWait(driver,5).until(EC.visibility_of_element_located((By.XPATH,'//*[@aria-label="Following @tapup_tg"]')))
+                print('Fowllow tapup_tg OK')
+                break
+            except: 
+                try:
+                    element = WebDriverWait(driver,5).until(EC.visibility_of_element_located((By.XPATH,'//*[@aria-label="Follow @tapup_tg"]')))
+                    element.click()
+                    print('Fowllow tapup_tg OK')
+                except: 
+                    driver.find_element(By.XPATH,'//button[@data-testid="confirmationSheetConfirm"]').click()
+                    
+        TimeInt = time.time(); TimeOut = 60
+        while time.time() < TimeInt+TimeOut:
+            try:
+                driver.get('https://x.com/intent/follow?screen_name=cyclenetwork_GO')
+                element = WebDriverWait(driver,5).until(EC.visibility_of_element_located((By.XPATH,'//*[@aria-label="Following @cyclenetwork_GO"]')))
+                print('Fowllow cyclenetwork_GO OK')
+                break
+            except: 
+                try:
+                    element = WebDriverWait(driver,5).until(EC.visibility_of_element_located((By.XPATH,'//*[@aria-label="Follow @cyclenetwork_GO"]')))
+                    element.click()
+                    print('Fowllow cyclenetwork_GO OK')
+                except:
+                    driver.find_element(By.XPATH,'//button[@data-testid="confirmationSheetConfirm"]').click()
+                    
 
         driver.get(LinkRef)
+    
         try:
-            signNature = WebDriverWait(driver,60).until(EC.presence_of_element_located((By.XPATH,'//div[text()="Sign signature"]')))
-            if signNature:
-                signNature.click()
-                WebDriverWait(driver,60).until(EC.presence_of_element_located((By.XPATH,'(//p[text()="Connect Wallet"])[2]')))
-                driver.find_element(By.XPATH,'(//p[text()="Connect Wallet"])[2]').click()
-                WebDriverWait(driver,60).until(EC.presence_of_element_located((By.XPATH,'//span[text()="MetaMask"]')))
-                driver.find_element(By.XPATH,'//span[text()="MetaMask"]').click()
+            WebDriverWait(driver,10).until(EC.presence_of_element_located((By.XPATH,'//button[@aria-label="Close"]')))
+            close = driver.find_element(By.XPATH,'//button[@aria-label="Close"]')
+            close.click()
+        except: time.sleep(0.5)
+        try:
 
-        except:
-            time.sleep(0.5)
-       
-        TimeInt = time.time(); TimeOut = 60
-        found = False
-        while time.time() < TimeInt + TimeOut and not found:
-            try:
+            signNature = WebDriverWait(driver,10).until(EC.presence_of_element_located((By.XPATH,'//div[text()="Sign signature"]')))
+            if signNature:
+                driver.find_element(By.XPATH,'//div[text()="Sign signature"]').click()
+                time.sleep(3)
                 main_window = driver.current_window_handle
                 all_windows = driver.window_handles
                 for window in all_windows:
                     if window != main_window:
                         driver.switch_to.window(window)
-                        print('Đang ở cửa sổ: ', driver.title)
+                        print('Đang ở cửa sổ: ',driver.title)
                         if driver.title == "MetaMask":
-                            click_button_with_text(driver, "Next")
-                            click_button_with_text(driver, "Confirm")
-                            click_button_with_text(driver, "Approve")
-                            click_button_with_text(driver, "Switch network")
-                            found = True
-                            break  # Thoát vòng lặp for nếu tìm thấy và xử lý cửa sổ MetaMask
-                else:
-                    continue  # Nếu không có break trong for, tiếp tục vòng lặp while
-                break  # Nếu có break trong for, thoát vòng lặp while
-            except Exception as e:
-                print(f"Lỗi: {e}")
-                    
+                            scrSign = '''
+                            var buttons = document.querySelectorAll('button');
+                            var found = false;
+                            buttons.forEach(function(button) {
+                                if (button.textContent.trim() === "Sign") {
+                                    button.click();
+                                    found = true;
+                                }
+                            });
+                            if (!found) {
+                                console.log("Không tìm thấy phần tử <button> với text 'Sign'.");
+                            }
+                        '''
+                            driver.execute_script(scrSign)
+                        
+                            
+        except: 
+            TimeInt = time.time(); TimeOut = 60
+            while time.time() < TimeInt + TimeOut:
+                try:
+                    print("Connect Wallet")
+                    driver.find_element(By.XPATH,'(//p[text()="Connect Wallet"])[2]').click()
+                    print("MetaMask")
+                    driver.find_element(By.XPATH,'//span[text()="MetaMask"]').click()
+                    time.sleep(3)
+                    break
+                except: time.sleep(0.5)
+            
+            found = False
+            TimeInt = time.time(); TimeOut = 60
+            while time.time() < TimeInt + TimeOut and not found:
+                try:
+                    main_window = driver.current_window_handle
+                    all_windows = driver.window_handles
+                    for window in all_windows:
+                        if window != main_window:
+                            driver.switch_to.window(window)
+                            print('Đang ở cửa sổ: ', driver.title)
+                            if driver.title == "MetaMask":
 
-        
+                                scrNext = '''
+                                var buttons = document.querySelectorAll('button');
+                                var found = false;
+                                buttons.forEach(function(button) {
+                                    if (button.textContent.trim() === "Next") {
+                                        button.click();
+                                        found = true;
+                                    }
+                                });
+                                if (!found) {
+                                    console.log("Không tìm thấy phần tử <button> với text 'Next'.");
+                                }
+                            '''
+                                driver.execute_script(scrNext)
+                                print("Next")
+                                time.sleep(3)
+                                scrConfirm = '''
+                                var buttons = document.querySelectorAll('button');
+                                var found = false;
+                                buttons.forEach(function(button) {
+                                    if (button.textContent.trim() === "Confirm") {
+                                        button.click();
+                                        found = true;
+                                    }
+                                });
+                                if (!found) {
+                                    console.log("Không tìm thấy phần tử <button> với text 'Confirm'.");
+                                }
+                            '''
+                                driver.execute_script(scrConfirm)
+                                print("Confirm")
+                                time.sleep(3)
 
+                                scrApprove = '''
+                                var buttons = document.querySelectorAll('button');
+                                var found = false;
+                                buttons.forEach(function(button) {
+                                    if (button.textContent.trim() === "Approve") {
+                                        button.click();
+                                        found = true;
+                                    }
+                                });
+                                if (!found) {
+                                    console.log("Không tìm thấy phần tử <button> với text 'Approve'.");
+                                }
+                            '''
+                                driver.execute_script(scrApprove)
+                                print("Approve")
+                                time.sleep(3)
+
+                                scrSwitchNetwork = '''
+                                var buttons = document.querySelectorAll('button');
+                                var found = false;
+                                buttons.forEach(function(button) {
+                                    if (button.textContent.trim() === "Switch network") {
+                                        button.click();
+                                        found = true;
+                                    }
+                                });
+                                if (!found) {
+                                    console.log("Không tìm thấy phần tử <button> với text 'Switch network'.");
+                                }
+                            '''
+                                driver.execute_script(scrSwitchNetwork)
+                                print("Switch Network")
+                                found = True
+                                break  # Thoát vòng lặp for nếu tìm thấy và xử lý cửa sổ MetaMask
+                        
+                except Exception as e:
+                    print(f"Lỗi: {e}")
+                    time.sleep(0.5)
+
+            windows = driver.window_handles
+            driver.switch_to.window(windows[0])
+            TimeInt = time.time(); TimeOut = 60
+            while time.time() < TimeInt + TimeOut:    
+                WebDriverWait(driver,10).until(EC.presence_of_element_located((By.XPATH,'//div[text()="Sign signature"]')))    
+                driver.find_element(By.XPATH,'//div[text()="Sign signature"]').click()
+                print("Sign Signature")
+                break
+
+            TimeInt = time.time(); TimeOut = 60
+            while time.time() < TimeInt + TimeOut:
+                signNature = WebDriverWait(driver,10).until(EC.presence_of_element_located((By.XPATH,'//div[text()="Sign signature"]')))
+                if signNature:
+                    driver.find_element(By.XPATH,'//div[text()="Sign signature"]').click()
+                    time.sleep(3)
+                    main_window = driver.current_window_handle
+                    all_windows = driver.window_handles
+                    for window in all_windows:
+                        if window != main_window:
+                            driver.switch_to.window(window)
+                            print('Đang ở cửa sổ: ',driver.title)
+                            if driver.title == "MetaMask":
+                                scrSign = '''
+                                var buttons = document.querySelectorAll('button');
+                                var found = false;
+                                buttons.forEach(function(button) {
+                                    if (button.textContent.trim() === "Sign") {
+                                        button.click();
+                                        found = true;
+                                    }
+                                });
+                                if (!found) {
+                                    console.log("Không tìm thấy phần tử <button> với text 'Sign'.");
+                                }
+                            '''
+                                driver.execute_script(scrSign)
+                                break
+                
+        windows = driver.window_handles
+        driver.switch_to.window(windows[0])
+        TimeInt = time.time(); TimeOut = 60
+        while time.time() < TimeInt + TimeOut:
+            try:
+                driver.find_element(By.XPATH,'//div[text()="Claimed"]')
+                print("Verify OK")
+                print('Claimed')
+                break
+            except: time.sleep(0.5)
+            try:
+                driver.execute_script("document.querySelector('.css-okxgzo').scrollIntoView({ behavior: 'smooth' });")
+                print("Cuộn đến cuối trang")
+            except: time.sleep(0.5)
+            try:
+                driver.execute_script(verify)
+            except: time.sleep(0.5)
+            try:
+                driver.find_element(By.XPATH,'//div[text()="connect"]').click()
+                print('Click Connect Twitter')
+            except: time.sleep(0.5)
+            try:
+                driver.find_element(By.XPATH,'//*[@class="submit button selected"]').click()
+            except: time.sleep(0.5)
+        TimeInt = time.time(); TimeOut = 60
+        while time.time() < TimeInt + TimeOut:
+            windows = driver.window_handles
+            driver.switch_to.window(windows[0])
+            try:
+                driver.find_element(By.XPATH,'//div[text()="Claimed"]')
+                print("Verify OK")
+                print('Claimed')
+                break
+            except: time.sleep(0.5)
+
+            try:
+                driver.execute_script("document.querySelector('.css-okxgzo').scrollIntoView({ behavior: 'smooth' });")
+                print("Cuộn đến cuối trang")
+            except: time.sleep(0.5)
+            try:
+                driver.execute_script(verify)
+            except: time.sleep(0.5)
+            try:
+                element = driver.find_element(By.XPATH,'(//div[text()="follow"])[1]')
+                element.click()
+                print("Click Follow")
+            except: time.sleep(0.5)
+
+            
         input('----')
 
     
