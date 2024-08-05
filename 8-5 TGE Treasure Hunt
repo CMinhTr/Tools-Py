@@ -1,0 +1,82 @@
+ 
+import sys,os
+if os.getenv('COMPUTERNAME') == 'HCVIP-1':
+    sys.path.insert(0,r'F:\Share-MayChu\005-File Chay Tool 2022')
+else:
+    sys.path.insert(0,r'\\HCVIP-1\Share-MayChu\005-File Chay Tool 2022')
+from vinhthoai.Utils_Class import *
+from vinhthoai.Utils_Twitter import *
+from vinhthoai.Utils_GoogleChome import *
+# =========================================
+oExcel = Excel(win32gui.GetWindowText(win32gui.FindWindow('XLMAIN',None)),'title')
+CotKetQua_DienForm = "C"
+        
+#=======================================================================================================================================================
+if __name__ == "__main__":
+    for For1 in range(1,501):
+        if oExcel._ExcelReadCell( f"{CotKetQua_DienForm}{For1}") != None : continue
+        oExcel._ExcelBookSave()
+        Reset_Modem()
+
+        DD_ProfileChrome =  oExcel._ExcelReadCell( f"A{For1}")
+        if DD_ProfileChrome == None: sys.exit("Xong Het DD_ProfileChrome")
+        print(f"!!! STT {For1}: DD_ProfileChrome: {DD_ProfileChrome}")
+
+        Email =  oExcel._ExcelReadCell( f"F{For1}")
+        if Email == None: sys.exit("Xong Het Email")
+        print(f"!!! STT {For1}: Email: {Email}")
+
+        FullName =  oExcel._ExcelReadCell( f"H{For1}")
+        if FullName == None: sys.exit("Xong Het FullName")
+        print(f"!!! STT {For1}: FullName: {FullName}")
+
+        Username_Telegram =  oExcel._ExcelReadCell( f"J{For1}")
+        if Username_Telegram == None: sys.exit("Xong Het Username_Telegram")
+        print(f"!!! STT {For1}: Username_Telegram: {Username_Telegram}")
+
+        Username_Twitter =  oExcel._ExcelReadCell( f"M{For1}")
+        if Username_Twitter == None: sys.exit("Xong Het Username_Twitter")
+        print(f"!!! STT {For1}: Username_Twitter: {Username_Twitter}")
+
+        Username_Discord =  oExcel._ExcelReadCell( f"P{For1}")
+        if Username_Discord == None: sys.exit("Xong Het Username_Discord")
+        print(f"!!! STT {For1}: Username_Discord: {Username_Discord}")
+
+        Wallet =  oExcel._ExcelReadCell( f"S{For1}") #ThayDoi
+        if Wallet == None: sys.exit("Xong Het Link_Youtube")
+        print(f"!!! STT {For1}: Wallet: {Wallet}")
+
+
+        chromedriver  = Google_Chrome()
+        driver = chromedriver.ChromeDriver_Setup(
+            user_data_dir=DD_ProfileChrome,
+            undetect_chrome=False)
+
+        try:
+            driver.get('https://docs.google.com/forms/d/e/1FAIpQLSfuFHosQflisPRqmRLHhDTpYJdIbvZV-nDE83PkmR7xzoVT7Q/viewform')
+            time.sleep(3)
+
+            driver.find_element(By.XPATH,'//div[@id="i5"]').click()
+
+            driver.find_element(By.XPATH,'//input[@aria-labelledby="i8"]').send_keys(FullName)
+
+            driver.find_element(By.XPATH,'//input[@aria-labelledby="i12"]').send_keys(Wallet)
+
+            driver.find_element(By.XPATH,'//input[@aria-labelledby="i16"]').send_keys(Username_Twitter)
+
+            driver.find_element(By.XPATH,'//input[@aria-labelledby="i20"]').send_keys(Username_Discord)
+
+            driver.find_element(By.XPATH,'//textarea[@aria-labelledby="i24"]').send_keys(Username_Telegram)
+
+            driver.find_element(By.XPATH,'//div[@aria-label="Submit"]').click()
+
+            WebDriverWait(driver,10).until(EC.presence_of_element_located((By.XPATH,'//div[@class="vHW8K"]')))
+            resutl = driver.find_element(By.XPATH,'//div[@class="vHW8K"]')
+            resutl_from = resutl.text
+            print('Kết quả: ',resutl_from)
+            oExcel._ExcelWriteCell(resutl_from,f'{CotKetQua_DienForm}{For1}')
+        except Exception as e:
+            oExcel._ExcelWriteCell(e,f'{CotKetQua_DienForm}{For1}')
+            print('Lỗi: ', e)
+        finally: 
+            driver.quit()
