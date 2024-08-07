@@ -12,7 +12,7 @@ if __name__=="__main__":
     for For1 in range(1, 999):
 
         if oExcel._ExcelReadCell(f'{CotKetQua}{For1}')!=None:continue
-        #Reset_Modem()
+        Reset_Modem()
         oExcel._ExcelBookSave()
 
         DD_ProfileChrome = oExcel._ExcelReadCell(f"A{For1}")
@@ -72,30 +72,33 @@ if __name__=="__main__":
             driver.quit()
             continue
 
-
         Timeint = time.time(); TimeOut= 60; 
         while time.time() < Timeint + TimeOut:
-            try:
-                element = driver.find_element(By.XPATH,'//*[@id="privacy_consent_label"]')
-                driver.execute_script("arguments[0].click();", element)
-                element.click()
-            except:
-                print('Error Click')
-                time.sleep(0.5)
+            
             try:
                 full_name = driver.find_element(By.XPATH,'//input[@name="first_name"]')
                 full_name.clear()
                 full_name.send_keys(FullName)
+                time.sleep(3)
             except:
                 time.sleep(0.5)
             try:
                 email = driver.find_element(By.XPATH,'//input[@name="email"]')
                 email.clear()
                 email.send_keys(Email)
+                time.sleep(3)
             except:
                 time.sleep(0.5)
             try:
+                element = driver.find_element(By.XPATH,'//*[@id="privacy_consent_label"]')
+                driver.execute_script("arguments[0].click();", element)
+                time.sleep(3)
+            except:
+                print('Error Click')
+                time.sleep(0.5)
+            try:
                 driver.find_element(By.XPATH,'//input[@type="submit"]').click()
+                time.sleep(3)
                 print("Đã gửi code đăng ký")
                 WebDriverWait(driver,10).until(EC.presence_of_element_located((By.XPATH,'//a[text()="View Leaderboard"]')))
                 break
@@ -103,15 +106,126 @@ if __name__=="__main__":
                 time.sleep(0.5)
         else:
             oExcel._ExcelWriteCell("Error gữi code đăng ký")
+            continue
+
 
         try:    
             id_messagae = gmail_client.ReadIDMail_Gmail('Please click the following verification link to be added to the V-Card waitlist.',60)
-            url_message = gmail_client.ReadMail_Gmail(id_messagae,'get_code\?id=(.*?)<')
+            url_message = gmail_client.ReadMail_Gmail(id_messagae,'(?s)verify-email\?c=(.*?)"')
             print(url_message)
         except Exception as e:
             oExcel._ExcelWriteCell(str(e), f"{CotKetQua}{For1}")
             continue
-        input('---')
+
+
+
+        Timeint = time.time(); TimeOut= 60; 
+        while time.time() < Timeint + TimeOut:
+            try:
+                url_verify = f'https://app.kickofflabs.com/verify-email?c={url_message}'
+                driver.get(url_verify)
+                print('--- Đã truy cập Verify Me')
+                break
+            except:
+                time.sleep(0.5)
+                print('--- Đang truy cập Verify Me')
+        else:
+            oExcel._ExcelWriteCell('Error Verify Me',f'{CotKetQua}{For1}')
+            continue
+        
+        main_window = driver.current_window_handle
+        Timeint = time.time(); TimeOut= 60; 
+        while time.time() < Timeint + TimeOut:
+            driver.switch_to.default_content()
+            try:
+                follow_us_on_X = driver.find_element(By.XPATH,'//div[text()="Follow us on X!"]')
+                follow_us_on_X.click()
+                print('--- Đang tìm button Follow')
+            except:
+                time.sleep(0.5)
+
+            try:
+                iframe = driver.find_element(By.XPATH,'//*[@id="twitter-widget-0"]')
+                driver.switch_to.frame(iframe)
+            except: time.sleep(0.5)
+
+            try:
+                try:
+                    iframe = driver.find_element(By.XPATH,'//*[@id="twitter-widget-0"]')
+                    driver.switch_to.frame(iframe)
+                except: time.sleep(0.5)
+                driver.find_element(By.XPATH,'//b[text()="@VerseEcosystem"]').click()
+                # driver.execute_script('''
+                #     var buttons = document.querySelectorAll('b');
+                #     var found = false;
+                #     buttons.forEach(function(button) {
+                #         if (button.textContent.trim() === "@VerseEcosystem") {
+                #             button.click();
+                #             found = true;
+                #         }
+                #     });
+                # ''')
+                print('Follow @VerseEcosystem')
+                break   
+            except:
+                time.sleep(0.5)
+                print('Error Follow @VerseEcosystem')
+        
+        Timeint = time.time(); TimeOut= 60; 
+        while time.time() < Timeint + TimeOut:
+            try:
+                
+                driver.find_element(By.XPATH,'//div[text()="Join us on Telegram!"]').click()
+                print('Join us on Telegram!')
+                break
+            except:
+                time.sleep(0.5)
+                print('Error Join us on Telegram!')
+
+        Timeint = time.time(); TimeOut= 60; 
+        while time.time() < Timeint + TimeOut:
+            try:
+                driver.switch_to.window(main_window)
+                repost_us = driver.find_element(By.XPATH,'//div[text()="Repost us!"]')
+                repost_us.click()
+                print('--- Đang tìm button Repost us!')
+            except:
+                time.sleep(0.5)
+
+            try:
+                WebDriverWait(driver,10).until(EC.presence_of_element_located((By.XPATH,'//a[@class="btn btn-twitter"]')))
+                driver.find_element(By.XPATH,'//a[@class="btn btn-twitter"]').click()
+                print('Retweet')
+                break
+            except:
+                time.sleep(0.5)
+                print('Error Retweet')
+        Timeint = time.time(); TimeOut= 60; 
+        while time.time() < Timeint + TimeOut:
+            try:
+                driver.switch_to.window(main_window)
+                get_ref = driver.find_element(By.XPATH,'//input[@class="kol-copy-and-paste-sharelink form-control form-control-appended has-set-radius"]')
+                ref = get_ref.get_attribute('value')
+                print('Ref: ',ref)
+                oExcel._ExcelWriteCell(ref,f'{CotKetQua}{For1}')
+                break
+            except:
+                time.sleep(0.5)
+                print('--- Đang tìm ref')
+        else:
+            oExcel._ExcelWriteCell('Error lấy Ref',f'{CotKetQua}{For1}')
+
+        Timeint = time.time(); TimeOut= 60; 
+        while time.time() < Timeint + TimeOut:
+            try:
+                driver.refresh()
+                WebDriverWait(driver,60).until(EC.presence_of_element_located((By.XPATH,'(//span[@class="kol-data-replace"])[2]')))
+                get_point = driver.find_element(By.XPATH,'(//span[@class="kol-data-replace"])[2]')
+                point = get_point.text
+                print('Point: ',point)
+                oExcel._ExcelWriteCell(point,f'D{For1}')
+            except:
+                print('Error get point')    
         driver.quit()
 
 
