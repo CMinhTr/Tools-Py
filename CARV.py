@@ -1,146 +1,86 @@
-import sys,os
-if os.getenv('COMPUTERNAME') == 'HCVIP-1':
-    sys.path.insert(0,r'F:\Share-MayChu\005-File Chay Tool 2022')
-else:
-    sys.path.insert(0,r'\\HCVIP-1\Share-MayChu\005-File Chay Tool 2022')
+import asyncio
+import requests
+import pyuseragents
+from eth_account.messages import encode_defunct
+from web3 import Web3, Account
 
-from vinhthoai.Utils_Gmail import *
-oExcel=Excel(win32gui.GetWindowText(win32gui.FindWindow('XLMAIN',None)),'title')
+Account.enable_unaudited_hdwallet_features()
 
-CotKetQua ="C"
+mnemonic = "garlic develop visit stay celery model erase stadium snack elevator increase thunder"
+headers = {
+    "accept": "application/json, text/plain, */*",
+    "accept-language": "en-US,en;q=0.9",
+    "origin": "https://protocol.carv.io",
+    "referer": "https://protocol.carv.io/",
+    "user-agent": pyuseragents.random(),
+    "x-app-id": "carv",
+}
 
-def loginWallet():
+# Lấy text từ API để ký
+url = f"https://interface.carv.io/protocol/wallet/get_signature_text"
+response = requests.request('GET', url, json=None, headers=headers).json()
 
-    Timeint = time.time(); TimeOut= 90;Error = 0
-    while time.time() < Timeint + TimeOut:
-            
-        current = driver.current_window_handle
-        driver.switch_to.window(current)
+rp = response["data"]["text"]
+print('Response: ', rp)
 
-        for handle in driver.window_handles:
-            driver.switch_to.window(handle)
-            if handle != current:
-                driver.close()
+# Kết nối với mạng OP BNB
+op_rpc = "https://opbnb-mainnet-rpc.bnbchain.org"
+op_bnb = Web3(Web3.HTTPProvider(op_rpc))
+print('op_bnb: ', op_bnb)
 
-        driver.get('chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/home.html#unlock')
-        try:
-            print('Nhập mật khẩu')
-            element = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div[2]/div/div/form/div/div/input")))
-            element.send_keys('Hungcuong@6789')
-            element.send_keys(Keys.ENTER)
-            time.sleep(3)
-            driver.find_element(By.XPATH,'//*[@class="app-header__metafox-logo--horizontal"]')
-            print("Đăng nhập thành công")
-            break
-        except: 
-            print('Error Nhập mật khẩu')
-            
-    else:
-        oExcel._ExcelWriteCell(f'{CotKetQua}{For1}','Import Không Thành Công')
-        print('Import Không Thành Công')
-def disable_extensions(driver):
+# Tạo ví từ mnemonic
+op_bnb_wallet = op_bnb.eth.account.from_mnemonic(mnemonic)
+print('op_bnb_wallet: ', op_bnb_wallet)
 
-    driver.get('chrome://extensions/')
+private_key_a = op_bnb_wallet._private_key
+print('private_key_a: ', private_key_a)
 
-    extensionIds = ['jiidiaalihmmhddjgbnbgdfflelocpak','mcohilncbfahbmgdjkbpemcciiolgcge','pdliaogehgdbhbnmkklieghmmjkpigpa']
-    script = '''
-    let extensionIds = arguments[0];
-    extensionIds.forEach(extensionId => {
-        let manager = document.querySelector("body > extensions-manager").shadowRoot;
-        let itemsList = manager.querySelector("#items-list").shadowRoot;
-        let extension = itemsList.querySelector(`#${extensionId}`);
-        if (extension) {
-            let toggle = extension.shadowRoot.querySelector('cr-toggle');
-            if (toggle && toggle.hasAttribute('checked')) {
-                toggle.click();
-            }
+# Ký tin nhắn
+encoded_msg = encode_defunct(text=rp)
+print('encoded_msg: ', encoded_msg)
+
+signed_msg = Web3().eth.account.sign_message(encoded_msg, private_key=private_key_a)
+a = signed_msg.signature.hex()
+print('Signed_msg: ', a)
+
+# Đăng nhập và lấy token
+json_data = {
+    "wallet_addr": "0x50d7f0fbe86ef1e0f065d648998bf8567018b4c5",
+    "text": rp,
+    "signature": a,
+}
+
+login_url = f"https://interface.carv.io/protocol/login"
+
+response_login = requests.request('POST', login_url, json=json_data).json()
+rp_login = response_login['data']['token']
+print('rp_login: ', rp_login)
+print('response_login: ', response_login)
+
+# Hàm process_mint()
+async def process_mint():
+    try:
+        # Kiểm tra số dư
+        balance = op_bnb.eth.get_balance(op_bnb_wallet.address)
+        if balance == 0:
+            print(f"Insufficient balance for mint | Network: OP")
+            return
+        
+        # Thực hiện mint
+        # Bạn cần thay đổi đoạn này theo yêu cầu thực tế của quá trình mint
+        mint_url = f"https://interface.carv.io/airdrop/mint/carv_soul"
+        mint_data = {
+            "chain_id": 2020
         }
-    });
-    '''
-    driver.execute_script(script, extensionIds)
-                    
-if __name__=="__main__":
-
-    for For1 in range(1,999):
-
-        if oExcel._ExcelReadCell(f'{CotKetQua}{For1}')!=None:continue
-        #Reset_Modem()
-        oExcel._ExcelBookSave()
-        extension_link = dict()
+        response_mint = requests.request('POST', mint_url, json=mint_data, headers=headers).json()
         
-
-        DD_ProfileChrome = oExcel._ExcelReadCell(f"A{For1}")
-        if DD_ProfileChrome==None:sys.exit("Doc xong het DD_ProfileChrome")
-        print(f"!!! STT {For1}:DD_ProfileChrome :  {DD_ProfileChrome}")
-                        
-        NguoiDung= oExcel._ExcelReadCell(f"B{For1}")
-        if NguoiDung==None:sys.exit("Doc xong het Nguoi Dung")
-        print(f"!!! STT {For1}:Nguoi Dung :  {NguoiDung}")
-
-        Email = oExcel._ExcelReadCell(f"F{For1}")
-        if Email == None:sys.exit("Doc xong het Email")
-        print(f"!!! STT {For1}:Email :  {Email}")
-
-        Password = oExcel._ExcelReadCell(f"G{For1}")
-        if Password == None:sys.exit("Doc xong het Password")
-        print(f"!!! STT {For1}:Password :  {Password}")
-
-
-
-        Chrome_Driver = Google_Chrome()
-        Chrome_Driver.ChromeDriver_Kill(BROWER_DEFAUT)
-
-        driver = Chrome_Driver.ChromeDriver_Setup(user_data_dir=DD_ProfileChrome, undetect_chrome=False)
-
-        driver.maximize_window()
-        disable_extensions(driver)
-        for handle in driver.window_handles:
-            driver.switch_to.window(handle)
-            if driver.title != '':
-                extension_link[f'{driver.title}'] = driver.current_url
-
+        if response_mint['code'] == 0:
+            print(f"Minted soul successfully: {response_mint['data']} | Network: OP")
+        else:
+            print(f"Failed to mint soul: {response_mint['msg']} | Network: OP")
         
-        loginWallet()
-        
-        driver.get('https://protocol.carv.io/airdrop')
-        TimeInt = time.time(); TimeOut = 60
-        while time.time() < TimeInt+TimeOut:
-            
-            try:
-                WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, '//button[text()="Login"]')))
-                login = driver.find_element(By.XPATH,'//button[text()="Login"]')
-                login.click()
-                print('Choose Login')
-            except:
-                time.sleep(0.5)
-            try:
-                    
-                MetaMask = driver.find_element(By.XPATH,'(//div[@class="iekbcc0 ju367v4 ju367va ju367v14 ju367v1s"])[1]')
-                MetaMask.click()
-                print('Choose MetaMask')
-            except:
-                time.sleep(0.5)
-            try:
-                print('Sign')
-                main_window = driver.current_window_handle
-                all_windows = driver.window_handles
+    except Exception as error:
+        print(f"Error during minting: {error}")
 
-                for window in all_windows:
-                    if window != main_window:
-                        driver.switch_to.window(window)
-                        print("Đã chuyển sang cửa sổ:", driver.title)
-                        # Thực hiện các thao tác trên cửa sổ popup ở đây
-
-                # Sau khi hoàn thành, chuyển lại cửa sổ chính (nếu cần)
-                pyautogui.press('tab')
-                pyautogui.press('tab')
-                pyautogui.press('enter')
-                
-                driver.switch_to.window(main_window)
-                break
-            except: 
-                time.sleep(0.5)
-        
-        input('---')
-
-            
+# Chạy hàm process_mint
+asyncio.run(process_mint())
